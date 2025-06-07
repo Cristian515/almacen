@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>📦 Inventario Interactivo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #eef9ff, #d0eaff);
+      padding: 10px;
+    }
+
+    header {
+      width: 100%;
+      background-color: #3498db;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .banner {
+      display: inline-block;
+      padding: 10px 0;
+      animation: scroll 20s linear infinite;
+    }
+
+    .banner img {
+      height: 50px;
+      margin: 0 20px;
+      vertical-align: middle;
+    }
+
+    @keyframes scroll {
+      from { transform: translateX(100%); }
+      to { transform: translateX(-100%); }
+    }
+
+    h2 {
+      text-align: center;
+      margin-top: 20px;
+      color: #2c3e50;
+    }
+
+    .acciones {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .acciones input, .acciones button {
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+    }
+
+    .acciones input {
+      width: 200px;
+      border: 1px solid #ccc;
+    }
+
+    .acciones button {
+      background-color: #27ae60;
+      color: white;
+      cursor: pointer;
+    }
+
+    .acciones button:hover {
+      background-color: #1e8449;
+    }
+
+    #lista-productos {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .producto {
+      background: white;
+      padding: 16px;
+      border-radius: 14px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      max-width: 300px;
+      width: 100%;
+      animation: aparecerLento 1s ease-out forwards;
+      opacity: 0;
+      transform: translateY(40px);
+    }
+
+    .producto img {
+      width: 100%;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    .producto button {
+      margin-top: 10px;
+      background-color: #e74c3c;
+      color: white;
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .producto button:hover {
+      background-color: #c0392b;
+    }
+
+    @keyframes aparecerLento {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .btn-volver {
+      margin: 30px auto;
+      background-color: #2980b9;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      display: block;
+    }
+
+    .btn-volver:hover {
+      background-color: #1c5c8a;
+    }
+
+    @media (max-width: 600px) {
+      .acciones {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .acciones input {
+        width: 90%;
+      }
+    }
+  </style>
+  
+</head>
+<body>
+
+<header>
+  <div class="banner">
+    <img src="https://cdn-icons-png.flaticon.com/128/3144/3144456.png">
+    <img src="https://cdn-icons-png.flaticon.com/128/1027/1027310.png">
+    <img src="https://cdn-icons-png.flaticon.com/128/2784/2784445.png">
+    <img src="https://cdn-icons-png.flaticon.com/128/2801/2801654.png">
+    <img src="https://cdn-icons-png.flaticon.com/128/270/270798.png">
+  </div>
+</header>
+
+<h2>📋 Productos Guardados</h2>
+
+<div class="acciones">
+  <input type="text" id="filtro" placeholder="Buscar por código, precio o cantidad">
+  <button onclick="exportarExcel()">📥 Exportar a Excel</button>
+</div>
+
+<div id="lista-productos"></div>
+
+<button class="btn-volver" onclick="window.location.href='index.html'">Volver al Gestor 🔄</button>
+
+<script>
+  let productosMostrados = [];
+
+  function mostrarProductos(filtroTexto = '') {
+    const contenedor = document.getElementById('lista-productos');
+    contenedor.innerHTML = '';
+    let delay = 0;
+    productosMostrados = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const clave = localStorage.key(i);
+      if (clave.startsWith('P')) {
+        const producto = JSON.parse(localStorage.getItem(clave));
+
+        // Filtro
+        const texto = filtroTexto.toLowerCase();
+        const coincide = producto.codigo.toLowerCase().includes(texto) ||
+                         String(producto.precio).includes(texto) ||
+                         String(producto.cantidad).includes(texto);
+
+        if (!coincide) continue;
+
+        productosMostrados.push(producto);
+
+        const div = document.createElement('div');
+        div.className = 'producto';
+        div.style.animationDelay = `${delay}s`;
+        delay += Math.random() * 0.4 + 0.2;
+
+        div.innerHTML = `
+          <p><strong>🔢 Código:</strong> ${producto.codigo}</p>
+          <p><strong>📦 Cantidad:</strong> ${producto.cantidad}</p>
+          <p><strong>💲 Precio:</strong> $${producto.precio}</p>
+          <img src="${producto.imagen}" alt="Producto">
+          <button onclick="eliminarProducto('${producto.codigo}')">🗑 Eliminar</button>
+        `;
+        contenedor.appendChild(div);
+      }
+    }
+  }
+
+  function eliminarProducto(codigo) {
+    localStorage.removeItem(codigo);
+    mostrarProductos(document.getElementById('filtro').value);
+  }
+
+  function exportarExcel() {
+    let csv = "Código,Cantidad,Precio\n";
+    productosMostrados.forEach(p => {
+      csv += `${p.codigo},${p.cantidad},${p.precio}\n`;
+    });
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "productos.csv";
+    a.click();
+  }
+
+  document.getElementById('filtro').addEventListener('input', () => {
+    mostrarProductos(document.getElementById('filtro').value);
+  });
+
+  window.onload = () => mostrarProductos();
+</script>
+
+</body>
+</html>
